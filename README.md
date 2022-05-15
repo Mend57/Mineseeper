@@ -1,2 +1,2 @@
 # Minesweeper
-Command line version of minesweeper
+Command line version of minesweeper implemented in kotlin.
