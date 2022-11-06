@@ -1,2 +1,2 @@
 # Minesweeper
-Command line version of minesweeper written in kotlin.
+CLI version of minesweeper written in kotlin.
