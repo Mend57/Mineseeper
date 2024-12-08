@@ -2,88 +2,21 @@ import kotlin.math.abs
 
 const val invalidResponse = "Invalid response.\n"
 const val chooseTarget = "\nChoose the Target cell (e.g 2D)"
-
-fun makeMenu(): String = "\nWelcome to DEISI Minesweeper\n\n1 - Start New Game\n0 - Exit Game\n"
+const val initialText = "\nWelcome to DEISI Minesweeper\n\n1 - Start New Game\n0 - Exit Game\n"
 
 fun startGame(): Boolean{
+    println("\nWelcome to DEISI Minesweeper\n\n1 - Start New Game\n0 - Exit Game\n")
     var start = readLine()?.toIntOrNull() ?: 2
     while(start != 1 && start != 0){
         println(invalidResponse)
-        println(makeMenu())
+        println(initialText)
         start = readLine()?.toIntOrNull() ?: 2
     }
-    if(start == 1) {
-        return true
-    }
-    return false
-}
-
-fun checkLength(name: String, minLength: Int): Boolean{
-    var i = 0
-    var space = 0
-    while(i < name.length && space == 0){
-        if(name[i] == ' ') {
-            space++
-        }
-        else {
-            i++
-        }
-    }
-    if (space > 0 && i >= minLength) {
-        return true
-    }
-    return false
-}
-
-fun checkSurname(surname: String): Boolean{
-    var i = 1
-    if (surname.first().isLowerCase()) {
-        return false
-    }
-    while (i < surname.length){
-        if (surname[i].isUpperCase()) {
-            return false
-        }
-        i++
-    }
-    return true
-}
-
-fun checkSurnames(name: String): Boolean{
-    var i = 0
-    var surname = ""
-    while (i < name.length){
-        if (i == name.length - 1 && name[i] == ' ') {
-            return false
-        }
-        else if(name[i] == ' '){
-            if (!checkSurname(surname)) {
-                return false
-            }
-            else {
-                surname = ""
-                i++
-            }
-        }
-        surname += name[i]
-        i++
-        if (i == name.length){
-            if (!checkSurname(surname)) {
-                return false
-            }
-            else {
-                surname = ""
-            }
-        }
-    }
-    return true
+    return start == 1
 }
 
 fun isNameValid(name: String?, minLength: Int = 3): Boolean{
-    if(name != null && checkLength(name, minLength) && checkSurnames(name)){
-        return true
-    }
-    return false
+    return name != null && name.length >= minLength
 }
 
 fun showLegend(legend: String): Boolean{
@@ -152,16 +85,16 @@ fun numColumns(columns: Int?): Int{
     return varColumns
 }
 
-fun getSquareAroundPoint(linha: Int, coluna: Int, numLines: Int, numColumns: Int): Pair<Pair<Int, Int>, Pair<Int, Int>> {
-    var yLeft = linha - 1
-    var yRight = linha + 1
-    var xLeft = coluna - 1
-    var xRight = coluna + 1
-    when(coluna){
+fun getSquareAroundPoint(line: Int, column: Int, numLines: Int, numColumns: Int): Pair<Pair<Int, Int>, Pair<Int, Int>> {
+    var yLeft = line - 1
+    var yRight = line + 1
+    var xLeft = column - 1
+    var xRight = column + 1
+    when(column){
         0 -> xLeft = 0
         numColumns-1 -> xRight = numColumns-1
     }
-    when(linha){
+    when(line){
         0 -> yLeft = 0
         numLines-1 -> yRight = numLines-1
     }
@@ -234,13 +167,13 @@ fun movementValidation(sideMove: Boolean, insideTerrain: Boolean): Boolean{
 }
 
 fun isEmptyAround(matrixTerrain: Array<Array<Pair<String, Boolean>>>, centerY: Int, centerX: Int, yl: Int, xl: Int, yr: Int, xr: Int): Boolean{
-    for(linha in yl..yr){
-        for (coluna in xl..xr){
-            if ((matrixTerrain[linha][coluna] == Pair("*", false)
-                        || matrixTerrain[linha][coluna] == Pair("*", true)
-                        || matrixTerrain[linha][coluna] == Pair("P", true) && (matrixTerrain[centerY][centerX] != Pair("P", true))
-                        || matrixTerrain[linha][coluna] == Pair("f", true))
-                && matrixTerrain[linha][coluna] != matrixTerrain[centerY][centerX]) {
+    for(line in yl..yr){
+        for (column in xl..xr){
+            if ((matrixTerrain[line][column] == Pair("*", false) 
+                || matrixTerrain[line][column] == Pair("*", true)
+                || matrixTerrain[line][column] == Pair("P", true) && (matrixTerrain[centerY][centerX] != Pair("P", true))
+                || matrixTerrain[line][column] == Pair("f", true))
+                && matrixTerrain[line][column] != matrixTerrain[centerY][centerX]) {
 
                 return false
             }
@@ -254,49 +187,39 @@ fun revealMatrix(matrixTerrain: Array<Array<Pair<String, Boolean>>>, coordY: Int
     val numColumns = getNumColumns(matrixTerrain)
     val square = getSquareAroundPoint(coordY, coordX, numLines, numColumns)
 
-    for(linha in square.first.first..square.second.first){
-        for (coluna in square.first.second..square.second.second){
+    for(line in square.first.first..square.second.first){
+        for (column in square.first.second..square.second.second){
             val mines = countNumberOfMinesCloseToCurrentCell(matrixTerrain,coordY,coordX)
             if (endGame) {
-                matrixTerrain[linha][coluna] = Pair(" ", true)
+                matrixTerrain[line][column] = Pair(" ", true)
             }
-            if(matrixTerrain[linha][coluna].first == " " && !endGame){
-                matrixTerrain[linha][coluna] = Pair(" ", true)
+            if(matrixTerrain[line][column].first == " " && !endGame){
+                matrixTerrain[line][column] = Pair(" ", true)
             }
-            if(matrixTerrain[linha][coluna].first == "$mines" && !endGame){
-                matrixTerrain[linha][coluna] = Pair("$mines", true)
+            if(matrixTerrain[line][column].first == "$mines" && !endGame){
+                matrixTerrain[line][column] = Pair("$mines", true)
             }
         }
     }
 }
 
 fun fillNumberOfMines(matrixTerrain: Array<Array<Pair<String, Boolean>>>){
-    for(linha in 0 until matrixTerrain.size){
-        for (coluna in 0 until matrixTerrain[linha].size){
-            val mines = countNumberOfMinesCloseToCurrentCell(matrixTerrain, linha, coluna)
-            if(mines > 0 && (matrixTerrain[linha][coluna] == Pair(" ", true) || matrixTerrain[linha][coluna] == Pair(" ", false))){
-                matrixTerrain[linha][coluna] = Pair("$mines", false)
+    for(line in 0 until matrixTerrain.size){
+        for (column in 0 until matrixTerrain[line].size){
+            val mines = countNumberOfMinesCloseToCurrentCell(matrixTerrain, line, column)
+            if(mines > 0 && (matrixTerrain[line][column] == Pair(" ", true) || matrixTerrain[line][column] == Pair(" ", false))){
+                matrixTerrain[line][column] = Pair("$mines", false)
             }
         }
     }
 }
 
 fun getNumLines(matrixTerrain: Array<Array<Pair<String, Boolean>>>): Int{
-    var numLines = 0
-    for(linha in 0 until matrixTerrain.size){
-        numLines++
-    }
-    return numLines
+    return matrixTerrain.size;
 }
 
 fun getNumColumns(matrixTerrain: Array<Array<Pair<String, Boolean>>>): Int{
-    var numColumns = 0
-    for(linha in 0 until 1){
-        for (coluna in 0 until matrixTerrain[linha].size){
-            numColumns++
-        }
-    }
-    return numColumns
+    return matrixTerrain[0].size
 }
 
 fun countNumberOfMinesCloseToCurrentCell(matrixTerrain: Array<Array<Pair<String, Boolean>>>, centerY: Int, centerX: Int): Int{
@@ -316,9 +239,9 @@ fun countNumberOfMinesCloseToCurrentCell(matrixTerrain: Array<Array<Pair<String,
         0 -> yLeft = 0
         numLines-1 -> yRight = numLines-1
     }
-    for(linha in yLeft..yRight){
-        for (coluna in xLeft..xRight){
-            if (matrixTerrain[linha][coluna] == Pair("*", false) || matrixTerrain[linha][coluna] == Pair("*", true)) {
+    for(line in yLeft..yRight){
+        for (column in xLeft..xRight){
+            if (matrixTerrain[line][column] == Pair("*", false) || matrixTerrain[line][column] == Pair("*", true)) {
                 mines++
             }
         }
@@ -362,22 +285,22 @@ fun createMatrixTerrain(numLines: Int, numColumns: Int, numMines: Int, ensurePat
 
 fun makeTerrainLegendEverything(matrixTerrain: Array<Array<Pair<String, Boolean>>>): String{
     var i = 0
-    var line = 1
+    var lineCount = 1
     var board = "    ${createLegend(matrixTerrain[0].size)}    \n 1 "
-    for(linha in 0 until matrixTerrain.size){
-        for (coluna in 0 until matrixTerrain[linha].size){
-            board += " ${(matrixTerrain[linha][coluna]).first} "
-            if (coluna < matrixTerrain[linha].size-1){
+    for(line in 0 until matrixTerrain.size){
+        for (column in 0 until matrixTerrain[line].size){
+            board += " ${(matrixTerrain[line][column]).first} "
+            if (column < matrixTerrain[line].size-1){
                 board += "|"
             }
         }
         if (i < matrixTerrain.size-1) {
             board += "\n   "
-            for (j in 0 until matrixTerrain[linha].size-1) {
+            for (j in 0 until matrixTerrain[line].size-1) {
                 board += "---+"
             }
-            line++
-            board += "---\n $line "
+            lineCount++
+            board += "---\n $lineCount "
             i++
         }
     }
@@ -386,27 +309,27 @@ fun makeTerrainLegendEverything(matrixTerrain: Array<Array<Pair<String, Boolean>
 
 fun makeTerrainLegend(matrixTerrain: Array<Array<Pair<String, Boolean>>>): String{
     var i = 0
-    var line = 1
+    var lineCount = 1
     var board = "    ${createLegend(matrixTerrain[0].size)}    \n 1 "
-    for(linha in 0 until matrixTerrain.size){
-        for (coluna in 0 until matrixTerrain[linha].size){
-            if(matrixTerrain[linha][coluna].second) {
-                board += " ${(matrixTerrain[linha][coluna]).first} "
+    for(line in 0 until matrixTerrain.size){
+        for (column in 0 until matrixTerrain[line].size){
+            if(matrixTerrain[line][column].second) {
+                board += " ${(matrixTerrain[line][column]).first} "
             } else {
                 board += "   "
             }
 
-            if (coluna < matrixTerrain[linha].size-1){
+            if (column < matrixTerrain[line].size-1){
                 board += "|"
             }
         }
         if (i < matrixTerrain.size-1) {
             board += "\n   "
-            for (j in 0 until matrixTerrain[linha].size-1) {
+            for (j in 0 until matrixTerrain[line].size-1) {
                 board += "---+"
             }
-            line++
-            board += "---\n $line "
+            lineCount++
+            board += "---\n $lineCount "
             i++
         }
     }
@@ -416,21 +339,21 @@ fun makeTerrainLegend(matrixTerrain: Array<Array<Pair<String, Boolean>>>): Strin
 fun makeTerrainNoLegend(matrixTerrain: Array<Array<Pair<String, Boolean>>>): String{
     var board = ""
     var i = 0
-    for(linha in 0 until matrixTerrain.size){
-        for (coluna in 0 until matrixTerrain[linha].size){
-            if(matrixTerrain[linha][coluna].second) {
-                board += " ${(matrixTerrain[linha][coluna]).first} "
+    for(line in 0 until matrixTerrain.size){
+        for (column in 0 until matrixTerrain[line].size){
+            if(matrixTerrain[line][column].second) {
+                board += " ${(matrixTerrain[line][column]).first} "
             } else {
                 board += "   "
             }
 
-            if (coluna < matrixTerrain[linha].size-1){
+            if (column < matrixTerrain[line].size-1){
                 board += "|"
             }
         }
         if (i < matrixTerrain.size-1) {
             board += "\n"
-            for (j in 0 until matrixTerrain[linha].size-1) {
+            for (j in 0 until matrixTerrain[line].size-1) {
                 board += "---+"
             }
             board += "---\n"
@@ -443,16 +366,16 @@ fun makeTerrainNoLegend(matrixTerrain: Array<Array<Pair<String, Boolean>>>): Str
 fun makeTerrainEverything(matrixTerrain: Array<Array<Pair<String, Boolean>>>): String{
     var board = ""
     var i = 0
-    for(linha in 0 until matrixTerrain.size){
-        for (coluna in 0 until matrixTerrain[linha].size){
-            board += " ${(matrixTerrain[linha][coluna]).first} "
-            if (coluna < matrixTerrain[linha].size-1){
+    for(line in 0 until matrixTerrain.size){
+        for (column in 0 until matrixTerrain[line].size){
+            board += " ${(matrixTerrain[line][column]).first} "
+            if (column < matrixTerrain[line].size-1){
                 board += "|"
             }
         }
         if (i < matrixTerrain.size-1) {
             board += "\n"
-            for (j in 0 until matrixTerrain[linha].size-1) {
+            for (j in 0 until matrixTerrain[line].size-1) {
                 board += "---+"
             }
             board += "---\n"
@@ -534,9 +457,7 @@ fun play(lines: Int, columns: Int, mines: Int, showLegend: Boolean){
 }
 
 fun main(){
-    println(makeMenu())
-    val start = startGame()
-    if(start) {
+    if(startGame()) {
         println("Enter player name?")
         var name = readLine().toString()
         if(name.isEmpty()) {
